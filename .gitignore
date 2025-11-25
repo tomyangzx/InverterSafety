@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+
+# RAG Data & Database (Private)
+# Ignore all files in data/
+data/*
+# But keep the directory itself (and this file if I create it, but .gitkeep is standard)
+!data/.gitkeep
+# If you want to share the example markdown files I created, uncomment the lines below:
+# !data/*.md
+
+# Local Vector Database
+chroma_db/
+
+# VS Code
+.vscode/

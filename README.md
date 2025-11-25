@@ -17,8 +17,6 @@ Try these now:
 *   `@workspace What are the ASIL D requirements for software unit testing according to Part 6?`
 *   `@workspace Explain the difference between Level 1 and Level 2 monitoring.`
 
-## Next Steps
-To make this even smarter:
-1.  **Add More Data**: Download the PDF standards and whitepapers mentioned in `docs/research_guide.md`.
-2.  **Convert to Markdown**: While Copilot reads code well, converting complex PDFs to Markdown (like the files in `data/`) often improves accuracy.
-3.  **Keep it Organized**: Group files by topic in `data/` (e.g., `data/standards/`, `data/hardware/`).
+## Privacy & Collaboration
+*   **Private Data**: The `data/` folder is configured in `.gitignore` to be ignored. Any PDFs or documents you put there will **NOT** be uploaded to GitHub.
+*   **Sharing**: You can safely commit and push this repository. Others can clone it, but they will need to populate their own `data/` folder to make it work.
