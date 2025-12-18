@@ -38,7 +38,9 @@ class CrashHandler:
                  dc_link_voltage: float = 800.0,
                  motor_speed_rpm: float = 0.0,
                  discharge_time_ms: int = 100,
-                 asc_time_ms: int = 50):
+                 asc_time_ms: int = 50,
+                 asc_decel_factor: float = 0.5,
+                 voltage_tolerance: float = 0.1):
         """
         Initialize crash handler.
         
@@ -47,11 +49,15 @@ class CrashHandler:
             motor_speed_rpm: Motor rotational speed in RPM
             discharge_time_ms: Time to hold active discharge state (ms)
             asc_time_ms: Time to hold ASC state before transitioning to ASO (ms)
+            asc_decel_factor: Motor speed reduction factor during ASC (0.0-1.0)
+            voltage_tolerance: Tolerance for voltage safety check (e.g., 0.1 = 10%)
         """
         self.dc_link_voltage = dc_link_voltage
         self.motor_speed_rpm = motor_speed_rpm
         self.discharge_time_ms = discharge_time_ms
         self.asc_time_ms = asc_time_ms
+        self.asc_decel_factor = asc_decel_factor
+        self.voltage_tolerance = voltage_tolerance
         
         self.current_state = SafetyState.NORMAL_OPERATION
         self.state_entry_time = None
@@ -174,7 +180,7 @@ class CrashHandler:
             time.sleep(self.asc_time_ms / 1000.0)
             
             # Simulate motor deceleration
-            self.motor_speed_rpm = self.motor_speed_rpm * 0.5
+            self.motor_speed_rpm = self.motor_speed_rpm * self.asc_decel_factor
             print(f"  Motor Speed: Reduced to {self.motor_speed_rpm} RPM")
             print("  Status: ASC completed, motor safely decelerated")
         else:
@@ -219,7 +225,7 @@ class CrashHandler:
         # Verify safety conditions
         # The checks are more lenient for edge cases to ensure sequence completes
         # In production, these would be hardware-enforced
-        voltage_reduced = self.dc_link_voltage <= self.safe_voltage_threshold * 1.1  # Allow 10% tolerance
+        voltage_reduced = self.dc_link_voltage <= self.safe_voltage_threshold * (1.0 + self.voltage_tolerance)
         motor_safe = self.motor_speed_rpm <= self.high_speed_threshold_rpm  # ASC brings to safe level
         
         safety_checks = {
@@ -256,38 +262,47 @@ def main():
     print("800V INVERTER CRASH HANDLER - DEMONSTRATION")
     print("=" * 60)
     
-    # Scenario 1: High-speed crash (requires ASC)
-    print("\n\nSCENARIO 1: High-Speed Crash (Motor at 5000 RPM)")
-    print("-" * 60)
-    handler1 = CrashHandler(
-        dc_link_voltage=800.0,
-        motor_speed_rpm=5000.0,
-        discharge_time_ms=100,
-        asc_time_ms=50
-    )
-    handler1.execute_crash_sequence()
+    try:
+        # Scenario 1: High-speed crash (requires ASC)
+        print("\n\nSCENARIO 1: High-Speed Crash (Motor at 5000 RPM)")
+        print("-" * 60)
+        handler1 = CrashHandler(
+            dc_link_voltage=800.0,
+            motor_speed_rpm=5000.0,
+            discharge_time_ms=100,
+            asc_time_ms=50
+        )
+        handler1.execute_crash_sequence()
+        
+        # Scenario 2: Low-speed crash (ASC not required)
+        print("\n\nSCENARIO 2: Low-Speed Crash (Motor at 1000 RPM)")
+        print("-" * 60)
+        handler2 = CrashHandler(
+            dc_link_voltage=800.0,
+            motor_speed_rpm=1000.0,
+            discharge_time_ms=100,
+            asc_time_ms=50
+        )
+        handler2.execute_crash_sequence()
+        
+        # Scenario 3: Stationary crash
+        print("\n\nSCENARIO 3: Stationary Crash (Motor at 0 RPM)")
+        print("-" * 60)
+        handler3 = CrashHandler(
+            dc_link_voltage=800.0,
+            motor_speed_rpm=0.0,
+            discharge_time_ms=100,
+            asc_time_ms=50
+        )
+        handler3.execute_crash_sequence()
+        
+    except Exception as e:
+        print(f"\n\nERROR: Crash handler encountered an exception: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
     
-    # Scenario 2: Low-speed crash (ASC not required)
-    print("\n\nSCENARIO 2: Low-Speed Crash (Motor at 1000 RPM)")
-    print("-" * 60)
-    handler2 = CrashHandler(
-        dc_link_voltage=800.0,
-        motor_speed_rpm=1000.0,
-        discharge_time_ms=100,
-        asc_time_ms=50
-    )
-    handler2.execute_crash_sequence()
-    
-    # Scenario 3: Stationary crash
-    print("\n\nSCENARIO 3: Stationary Crash (Motor at 0 RPM)")
-    print("-" * 60)
-    handler3 = CrashHandler(
-        dc_link_voltage=800.0,
-        motor_speed_rpm=0.0,
-        discharge_time_ms=100,
-        asc_time_ms=50
-    )
-    handler3.execute_crash_sequence()
+    return True
 
 
 if __name__ == "__main__":

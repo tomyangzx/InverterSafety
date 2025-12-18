@@ -7,10 +7,10 @@ import unittest
 import sys
 import os
 
-# Add src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Add parent directory to path to enable imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from crash_handler import CrashHandler, SafetyState
+from src.crash_handler import CrashHandler, SafetyState
 
 
 class TestCrashHandler(unittest.TestCase):
